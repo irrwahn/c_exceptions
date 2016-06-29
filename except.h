@@ -5,22 +5,7 @@
 #include <setjmp.h>
 
 
-#ifdef USE_NO_EXCEPTIONS_
-
-#define exception_()  	(0)
-#define throw_(e) 		((void)0)
-#define try_ 			do { if ( 1 ) {
-#define catch_(x) 		} if ( 0 ) {
-#define catch_all_ 		} if ( 0 ) {
-#define final_			} if ( 1 ) {
-#define etry_ 			} } while ( 0 )
-
-#define exception_func_()  	("")
-#define exception_file_()  	("")
-#define exception_line_()  	(0)
-#define exception_ex_()  	(0)
-
-#else
+#ifndef DISABLE_EXCEPTIONS_
 
 typedef struct EXCEPT_STRUCT_ {
     const char *func;
@@ -29,16 +14,16 @@ typedef struct EXCEPT_STRUCT_ {
     unsigned short ex;
 } except_t_;
 
-typedef struct CTX_BUF_STRUCT_ {
+typedef struct EXCEPT_CTX_STRUCT_ {
 	except_t_ e;
     unsigned short flags;
-    struct CTX_BUF_STRUCT_ *next;
+    struct EXCEPT_CTX_STRUCT_ *next;
     jmp_buf jbuf;
-} ctxbuf_t_;
+} except_ctx_t_;
 
 
-extern void push_ctx_( ctxbuf_t_ *p );
-extern ctxbuf_t_ *pop_ctx_( void );
+extern void push_ex_ctx_( except_ctx_t_ *p );
+extern except_ctx_t_ *pop_ex_ctx_( void );
 extern void unhandled_ex_( except_t_ e, const char *func, const char *file, int line );
 
 
@@ -54,7 +39,7 @@ extern void unhandled_ex_( except_t_ e, const char *func, const char *file, int 
 
 #define throw_(E) \
 	do { \
-		ctxbuf_t_ *ctx_p_ = pop_ctx_(); \
+		except_ctx_t_ *ctx_p_ = pop_ex_ctx_(); \
 		if ( NULL == ctx_p_ ) { \
 			unhandled_ex_( ctxbuf_.e, __func__, __FILE__, __LINE__ ); \
 			abort(); \
@@ -70,7 +55,7 @@ extern void unhandled_ex_( except_t_ e, const char *func, const char *file, int 
 
 #define rethrow_() \
 	do { \
-		ctxbuf_t_ *ctx_p_ = pop_ctx_(); \
+		except_ctx_t_ *ctx_p_ = pop_ex_ctx_(); \
 		if ( NULL == ctx_p_ ) { \
 			unhandled_ex_( ctxbuf_.e, __func__, __FILE__, __LINE__ ); \
 			abort(); \
@@ -83,8 +68,8 @@ extern void unhandled_ex_( except_t_ e, const char *func, const char *file, int 
 
 #define try_ \
     do { \
-        ctxbuf_t_ ctxbuf_; \
-        push_ctx_( &ctxbuf_ ); \
+        except_ctx_t_ ctxbuf_; \
+        push_ex_ctx_( &ctxbuf_ ); \
         switch ( setjmp( ctxbuf_.jbuf ) ) \
         { \
         case 0: \
@@ -106,7 +91,7 @@ extern void unhandled_ex_( except_t_ e, const char *func, const char *file, int 
         } \
         if ( 1 ) { \
             if ( ctxbuf_.flags & CTX_ST_MUSTPOP_ ) { \
-                pop_ctx_(); \
+                pop_ex_ctx_(); \
                 ctxbuf_.flags &= ~CTX_ST_MUSTPOP_; \
             }
 
@@ -114,12 +99,27 @@ extern void unhandled_ex_( except_t_ e, const char *func, const char *file, int 
 #define etry_ \
         } \
         if ( ctxbuf_.flags & CTX_ST_MUSTPOP_ ) \
-            pop_ctx_(); \
+            pop_ex_ctx_(); \
         if ( ctxbuf_.e.ex && !( ctxbuf_.flags & CTX_ST_EXHANDLED_ ) ) \
 			rethrow_(); \
     } while ( 0 )
 
 
-#endif	//def USE_NO_EXEPTIONS_
+#else //def DISABLE_EXCEPTIONS_
+
+#define exception_()  	(0)
+#define throw_(e) 		((void)0)
+#define try_ 			do { if ( 1 ) {
+#define catch_(x) 		} if ( 0 ) {
+#define catch_all_ 		} if ( 0 ) {
+#define final_			} if ( 1 ) {
+#define etry_ 			} } while ( 0 )
+
+#define exception_func_()  	("")
+#define exception_file_()  	("")
+#define exception_line_()  	(0)
+#define exception_ex_()  	(0)
+
+#endif //ndef DISABLE_EXCEPTIONS_
 
 #endif //ndef INCLUDED_EXCEPT_H

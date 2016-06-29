@@ -13,7 +13,7 @@ static void test1( void )
     {
         printf( "in try 1...\n" );
         throw_( EX_BAR );
-        printf( "huh?!?\n" );
+        printf( "huh?!? 1\n" );
     }
     catch_( EX_FOO )
     {
@@ -39,7 +39,7 @@ static void test2( void )
     {
         printf( "in try 2...\n" );
         throw_( EX_FOO );
-        printf( "huh?!?\n" );
+        printf( "huh?!? 2\n" );
     }
     catch_( EX_FOO )
     {
@@ -58,7 +58,7 @@ static void test3( void )
     {
         printf( "in try 3...\n" );
         throw_( EX_BAR );
-        printf( "huh?!?\n" );
+        printf( "huh?!? 3\n" );
     }
     catch_( EX_FOO )
     {
@@ -67,6 +67,7 @@ static void test3( void )
     catch_all_
 	{
         printf( "caught unknown %d ...\n", exception_ex_() );
+		//throw_(42);
 	}
     etry_;
 }
@@ -78,7 +79,7 @@ static void test4( void )
         printf( "in try 4...\n" );
         throw_( 222 );
         throw_( EX_BAR );
-        printf( "huh?!?\n" );
+        printf( "huh?!? 4\n" );
     }
     catch_( EX_FOO )
     {
@@ -97,9 +98,8 @@ static void test5( void )
     try_
     {
         printf( "in try 5...\n" );
-        //throw_( EX_FOO );
         test4();
-        printf( "huh?!?\n" );
+        printf( "huh?!? 5\n" );
     }
     catch_( EX_BAR )
     {
@@ -120,18 +120,19 @@ int main( void )
 		test1();
 		test2();
 		test3();
-		//test4();
-		test5();
-		//throw_(42);
 	}
-	/*
+	etry_;
+
+	try_
+	{
+		test5();
+	}
     catch_all_
 	{
-        printf( "main caught exception %d from %s (%s:%d)...\n",
+        printf( "'%s' caught exception %d from '%s' (%s:%d)...\n", __func__,
 				exception_ex_(), exception_func_(),
 				exception_file_(), exception_line_() );
 	}
-	*/
 	etry_;
     return 0;
 }
